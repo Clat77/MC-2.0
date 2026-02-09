@@ -23,6 +23,7 @@ const navItems = [
   { id: 'squad', label: 'Elenco', icon: Users },
   { id: 'matches', label: 'Partidas', icon: Swords },
   { id: 'calendar', label: 'Calendário', icon: Calendar },
+  { id: 'statistics', label: 'Estatísticas', icon: BarChart3 },
   { id: 'office', label: 'Escritório', icon: Briefcase },
   { id: 'museum', label: 'Museu', icon: Trophy },
 ];
