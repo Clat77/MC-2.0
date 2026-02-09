@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Squad from './pages/Squad';
 import Matches from './pages/Matches';
 import CalendarPage from './pages/Calendar';
+import Statistics from './pages/Statistics';
 import Office from './pages/Office';
 import Museum from './pages/Museum';
 
