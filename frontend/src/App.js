@@ -1,53 +1,85 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState } from 'react';
+import { GameProvider, useGame } from './context/GameContext';
+import { Toaster } from 'sonner';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Pages
+import SaveSelection from './pages/SaveSelection';
+import Dashboard from './pages/Dashboard';
+import Squad from './pages/Squad';
+import Matches from './pages/Matches';
+import CalendarPage from './pages/Calendar';
+import Office from './pages/Office';
+import Museum from './pages/Museum';
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+// Components
+import AppLayout from './components/AppLayout';
+
+// Main App Content
+const AppContent = () => {
+  const { currentSave, loading } = useGame();
+  const [activePage, setActivePage] = useState('dashboard');
+
+  // Show loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-[#0a0a0a] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-zinc-500 font-heading uppercase tracking-widest">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No save loaded - show save selection
+  if (!currentSave) {
+    return <SaveSelection />;
+  }
+
+  // Render active page
+  const renderPage = () => {
+    switch (activePage) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'squad':
+        return <Squad />;
+      case 'matches':
+        return <Matches />;
+      case 'calendar':
+        return <CalendarPage />;
+      case 'office':
+        return <Office />;
+      case 'museum':
+        return <Museum />;
+      default:
+        return <Dashboard />;
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <AppLayout activePage={activePage} onPageChange={setActivePage}>
+      {renderPage()}
+    </AppLayout>
   );
 };
 
+// Root App with Providers
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <GameProvider>
+      <AppContent />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#1a1a1a',
+            color: '#ffffff',
+            border: '1px solid rgba(212, 175, 55, 0.3)',
+          },
+          className: 'font-body',
+        }}
+      />
+    </GameProvider>
   );
 }
 
