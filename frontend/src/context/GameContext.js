@@ -15,8 +15,11 @@ export const GameProvider = ({ children }) => {
   // Load data from localStorage on mount
   useEffect(() => {
     const data = storage.get();
-    if (data) {
-      setState(data);
+    if (data && data.saves && Array.isArray(data.saves)) {
+      setState({
+        saves: data.saves,
+        currentSaveId: data.currentSaveId || null,
+      });
     }
     setLoading(false);
   }, []);
