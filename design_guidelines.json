@@ -1,0 +1,128 @@
+{
+  "identity": {
+    "persona": "E1",
+    "role": "Creative Designer",
+    "aesthetic": "Mafia Luxury",
+    "principles": [
+      "Fusion over Imitation: Mix Sports Analytics with High-End Italian Fashion",
+      "Emotion First: Every interaction should feel 'heavy' and 'expensive'",
+      "Content is King: Data is the protagonist, framed in gold",
+      "Contrast: Deep blacks vs. Piercing Gold"
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "headings": "Barlow Condensed",
+      "body": "Manrope",
+      "accents": "Playfair Display"
+    },
+    "imports": [
+      "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Manrope:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+    ],
+    "usage": {
+      "h1": "font-['Barlow_Condensed'] font-bold text-5xl tracking-tighter uppercase text-white",
+      "h2": "font-['Barlow_Condensed'] font-semibold text-3xl tracking-tight text-[#D4AF37]",
+      "h3": "font-['Barlow_Condensed'] font-medium text-xl tracking-wide text-zinc-200",
+      "body": "font-['Manrope'] text-base text-zinc-300 leading-relaxed",
+      "quote": "font-['Playfair_Display'] italic text-lg text-[#D4AF37]/80",
+      "label": "font-['Barlow_Condensed'] uppercase tracking-[0.2em] text-xs text-zinc-500"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": {
+        "primary": "#0a0a0a",
+        "secondary": "#121212",
+        "gradient": "bg-gradient-to-b from-[#121212] to-[#0a0a0a]"
+      },
+      "brand": {
+        "gold": "#D4AF37",
+        "gold_dim": "#aa8c2c",
+        "gold_light": "#f3d066"
+      },
+      "danger": {
+        "blood": "#8a0303",
+        "blood_dark": "#4a0101"
+      },
+      "text": {
+        "primary": "#ffffff",
+        "secondary": "#a1a1aa",
+        "muted": "#52525b"
+      },
+      "border": {
+        "subtle": "rgba(255, 255, 255, 0.1)",
+        "gold": "rgba(212, 175, 55, 0.3)"
+      }
+    },
+    "theme_config": {
+      "mode": "dark",
+      "primary_color": "#D4AF37"
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid (Mobile-First)",
+    "spacing": {
+      "container_padding": "p-6 md:p-12",
+      "section_gap": "gap-8",
+      "item_gap": "gap-4"
+    },
+    "containers": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6",
+      "card": "bg-[#121212]/80 backdrop-blur-md border border-white/5 rounded-none relative overflow-hidden"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#D4AF37] hover:bg-[#aa8c2c] text-black font-['Barlow_Condensed'] font-bold uppercase tracking-widest px-8 py-3 rounded-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]",
+      "secondary": "bg-transparent border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 font-['Barlow_Condensed'] uppercase tracking-widest px-6 py-3 rounded-sm",
+      "danger": "bg-[#8a0303] hover:bg-[#600202] text-white font-['Barlow_Condensed'] uppercase tracking-widest px-6 py-3 rounded-sm shadow-[0_0_15px_rgba(138,3,3,0.4)]",
+      "ghost": "text-zinc-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-sm"
+    },
+    "cards": {
+      "base": "group relative bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-500",
+      "highlight": "absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+    },
+    "inputs": {
+      "base": "bg-black/50 border border-white/10 focus:border-[#D4AF37] text-white placeholder:text-zinc-600 rounded-sm px-4 py-3 font-['Manrope'] transition-colors"
+    },
+    "navigation": {
+      "drawer": "bg-[#0a0a0a] border-r border-white/5 text-white",
+      "item_active": "text-[#D4AF37] bg-[#D4AF37]/5 border-r-2 border-[#D4AF37]",
+      "item_inactive": "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+    }
+  },
+  "assets": {
+    "images": {
+      "background_texture": "https://images.unsplash.com/photo-1761437855598-011cf89b2ad4?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "stadium_night": "https://images.unsplash.com/photo-1673846446973-bad1f01794f3?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "mafia_office": "https://images.unsplash.com/photo-1740101957418-3597afffa019?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "trophy": "https://images.unsplash.com/photo-1704313097739-082bc2e8c945?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "tactical_board": "https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg"
+    },
+    "icons": "Lucide React (Gold stroke for active, Zinc for inactive)"
+  },
+  "instructions_to_main_agent": [
+    "1. IMPORT FONTS: Add the Google Fonts import link to the top of /app/frontend/src/index.css immediately.",
+    "2. SETUP TAILWIND: Update tailwind.config.js to include the custom colors (gold, blood) and font families.",
+    "3. GLOBAL STYLES: Apply the dark background gradient to the body in index.css.",
+    "4. COMPONENT OVERRIDES: When using Shadcn components, override the default radius to 'sm' or 'none' for that sharp, luxury feel.",
+    "5. MOBILE FIRST: Always build the mobile layout first (drawer navigation, stacked grids) then expand to desktop.",
+    "6. DATA-TESTID: Ensure every interactive element has a data-testid attribute.",
+    "7. NO MOCKING: Implement the logic using localStorage as requested. Do not mock the data persistence.",
+    "8. USE IMAGES: Use the provided image URLs for backgrounds (with low opacity overlays) to create texture."
+  ],
+  "universal_guidelines": {
+    "do_not": [
+      "Do not use rounded-xl or rounded-2xl. Keep it sharp (rounded-sm or rounded-none).",
+      "Do not use bright blues or greens. Stick to the Gold/Blood/Black palette.",
+      "Do not use generic 'Inter' font for headings.",
+      "Do not center text by default. Use strong left alignment for a 'document' feel."
+    ],
+    "must_do": [
+      "Use uppercase tracking-widest for labels and buttons.",
+      "Add subtle noise texture to the background if possible.",
+      "Use 'sonner' for notifications (styled with gold borders).",
+      "Ensure high contrast for text (White on Black)."
+    ]
+  }
+}
