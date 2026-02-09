@@ -48,6 +48,8 @@ const AppContent = () => {
         return <Matches />;
       case 'calendar':
         return <CalendarPage />;
+      case 'statistics':
+        return <Statistics />;
       case 'office':
         return <Office />;
       case 'museum':
