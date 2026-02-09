@@ -1,34 +1,87 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Gestor de MC - Main App Styles */
+
+/* Base App Container */
+.App {
+  min-height: 100vh;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Loading Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
-.App-link {
-    color: #61dafb;
+/* Selection styling */
+::selection {
+  background: rgba(212, 175, 55, 0.3);
+  color: #ffffff;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid #D4AF37;
+  outline-offset: 2px;
+}
+
+/* Transition defaults */
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Remove default button styles */
+button {
+  cursor: pointer;
+}
+
+/* Image defaults */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Disabled state */
+[disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Calendar Component Overrides */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #D4AF37;
+  --rdp-background-color: rgba(212, 175, 55, 0.1);
+}
+
+.rdp-day_selected {
+  background-color: #D4AF37 !important;
+  color: #000000 !important;
+}
+
+.rdp-day_today {
+  color: #D4AF37;
+  font-weight: bold;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+/* Slider Overrides */
+[data-orientation="horizontal"] > [role="slider"] {
+  background: #D4AF37;
+}
+
+[data-orientation="horizontal"] > span:first-child {
+  background: linear-gradient(to right, #D4AF37, #aa8c2c);
 }
