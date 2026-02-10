@@ -200,7 +200,7 @@ export const GameProvider = ({ children }) => {
 
   // Record match result
   const recordMatchResult = useCallback((matchId, result) => {
-    const { goalsFor, goalsAgainst, tactic, playerRatings, scorers } = result;
+    const { goalsFor, goalsAgainst, tactic, playerRatings, scorers, assisters, startingXI } = result;
     
     // Update match
     updateMatch(matchId, {
@@ -210,6 +210,8 @@ export const GameProvider = ({ children }) => {
       tactic,
       playerRatings,
       scorers,
+      assisters,
+      startingXI,
       playedAt: new Date().toISOString(),
     });
 
@@ -217,13 +219,16 @@ export const GameProvider = ({ children }) => {
     const updatedPlayers = (currentSave?.players || []).map(player => {
       const rating = playerRatings?.[player.id];
       const goalsScored = scorers?.filter(s => s === player.id).length || 0;
+      const assistsMade = assisters?.filter(a => a === player.id).length || 0;
+      const wasStarter = startingXI?.includes(player.id);
       
-      if (rating !== undefined) {
+      if (rating !== undefined || wasStarter) {
         return {
           ...player,
           games: player.games + 1,
           goals: player.goals + goalsScored,
-          ratings: [...(player.ratings || []), rating],
+          assists: (player.assists || 0) + assistsMade,
+          ratings: [...(player.ratings || []), rating || 6],
         };
       }
       return player;
