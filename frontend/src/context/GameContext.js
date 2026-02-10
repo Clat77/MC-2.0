@@ -267,12 +267,11 @@ export const GameProvider = ({ children }) => {
     return newEvent;
   }, [currentSave, updateSave]);
 
-  // End season
-  const endSeason = useCallback(() => {
+  // End season - Stay at club
+  const endSeasonStay = useCallback(() => {
     const currentPlayers = currentSave?.players || [];
     const currentMatches = currentSave?.matches || [];
     
-    // Calculate season stats
     const played = currentMatches.filter(m => m.played);
     const wins = played.filter(m => m.goalsFor > m.goalsAgainst).length;
     const draws = played.filter(m => m.goalsFor === m.goalsAgainst).length;
@@ -281,6 +280,8 @@ export const GameProvider = ({ children }) => {
     const goalsAgainst = played.reduce((sum, m) => sum + m.goalsAgainst, 0);
     
     const seasonHistory = {
+      team: currentSave?.team?.name,
+      league: currentSave?.league?.name,
       season: currentSave?.season,
       stats: { played: played.length, wins, draws, losses, goalsFor, goalsAgainst },
       trophies: currentSave?.trophies || [],
@@ -288,30 +289,14 @@ export const GameProvider = ({ children }) => {
       archivedAt: new Date().toISOString(),
     };
 
-    // Reset season stats but keep historical badges
     const resetPlayers = currentPlayers.map(p => {
-      const avgRating = p.ratings?.length > 0 
-        ? p.ratings.reduce((a, b) => a + b, 0) / p.ratings.length 
-        : 0;
-      
-      // Determine if player earned a badge this season
+      const avgRating = p.ratings?.length > 0 ? p.ratings.reduce((a, b) => a + b, 0) / p.ratings.length : 0;
       let badge = p.badge || null;
       if (p.games > 100 && avgRating > 7.5) badge = 'lenda';
       else if (p.games > 50 && (avgRating > 7.0 || p.goals > 30)) badge = 'idolo';
-      
-      return {
-        ...p,
-        seasonGoals: p.goals, // Archive
-        seasonGames: p.games,
-        seasonRatings: p.ratings,
-        goals: 0,
-        games: 0,
-        ratings: [],
-        badge,
-      };
+      return { ...p, seasonGoals: p.goals, seasonGames: p.games, seasonAssists: p.assists, goals: 0, assists: 0, games: 0, ratings: [], badge };
     });
 
-    // Increment season year
     const [startYear] = currentSave?.season?.split('/') || ['2025'];
     const newStartYear = parseInt(startYear) + 1;
     const newSeason = `${newStartYear}/${(newStartYear + 1).toString().slice(-2)}`;
@@ -321,9 +306,48 @@ export const GameProvider = ({ children }) => {
       players: resetPlayers,
       matches: [],
       trophies: [],
-      seasonHistory: [...(currentSave?.seasonHistory || []), seasonHistory],
+      careerHistory: [...(currentSave?.careerHistory || []), seasonHistory],
     });
   }, [currentSave, updateSave]);
+
+  // End season - Leave club
+  const endSeasonLeave = useCallback((newTeamData) => {
+    const currentMatches = currentSave?.matches || [];
+    const currentPlayers = currentSave?.players || [];
+    
+    const played = currentMatches.filter(m => m.played);
+    const wins = played.filter(m => m.goalsFor > m.goalsAgainst).length;
+    const draws = played.filter(m => m.goalsFor === m.goalsAgainst).length;
+    const losses = played.filter(m => m.goalsFor < m.goalsAgainst).length;
+    const goalsFor = played.reduce((sum, m) => sum + m.goalsFor, 0);
+    const goalsAgainst = played.reduce((sum, m) => sum + m.goalsAgainst, 0);
+    
+    const seasonHistory = {
+      team: currentSave?.team?.name,
+      league: currentSave?.league?.name,
+      season: currentSave?.season,
+      stats: { played: played.length, wins, draws, losses, goalsFor, goalsAgainst },
+      trophies: currentSave?.trophies || [],
+      topScorer: currentPlayers.sort((a, b) => b.goals - a.goals)[0]?.name,
+      archivedAt: new Date().toISOString(),
+    };
+
+    const existingCareerHistory = currentSave?.careerHistory || [];
+
+    updateSave({
+      team: newTeamData.team,
+      league: newTeamData.league,
+      season: newTeamData.season,
+      players: [],
+      matches: [],
+      trophies: [],
+      events: [],
+      careerHistory: [...existingCareerHistory, seasonHistory],
+    });
+  }, [currentSave, updateSave]);
+
+  // Legacy end season function
+  const endSeason = endSeasonStay;
 
   // Set captain/vice-captain
   const setCaptain = useCallback((playerId) => {
