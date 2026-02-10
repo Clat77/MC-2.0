@@ -493,40 +493,70 @@ export const Matches = () => {
                   </Select>
                 </div>
 
+                {/* Starting XI */}
+                {players.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="font-heading uppercase tracking-wider text-xs text-zinc-500">
+                      Titulares ({resultData.startingXI.length}/11)
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2 max-h-[150px] overflow-y-auto">
+                      {players.map(player => (
+                        <button
+                          key={player.id}
+                          onClick={() => handleToggleStarter(player.id)}
+                          className={`p-2 text-xs rounded border transition-all ${
+                            resultData.startingXI.includes(player.id)
+                              ? 'bg-gold/20 border-gold text-gold'
+                              : 'bg-zinc-900/50 border-zinc-700 text-zinc-400 hover:border-gold/50'
+                          }`}
+                        >
+                          {player.name.split(' ')[0]} ({player.position})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Scorers */}
                 {resultData.goalsFor > 0 && players.length > 0 && (
                   <div className="space-y-2">
                     <Label className="font-heading uppercase tracking-wider text-xs text-zinc-500">
-                      Artilheiros ({resultData.scorers.length}/{resultData.goalsFor})
+                      Gols ({resultData.scorers.length}/{resultData.goalsFor})
                     </Label>
-                    <Select
-                      disabled={resultData.scorers.length >= resultData.goalsFor}
-                      onValueChange={handleAddScorer}
-                    >
-                      <SelectTrigger className="bg-black/50 border-white/10 text-white">
-                        <SelectValue placeholder="Adicionar goleador" />
-                      </SelectTrigger>
+                    <Select disabled={resultData.scorers.length >= resultData.goalsFor} onValueChange={handleAddScorer}>
+                      <SelectTrigger className="bg-black/50 border-white/10 text-white"><SelectValue placeholder="Adicionar goleador" /></SelectTrigger>
                       <SelectContent className="bg-[#1a1a1a] border-white/10">
-                        {players.map(player => (
-                          <SelectItem key={player.id} value={player.id} className="text-white hover:bg-gold/10">
-                            {player.name} ({player.position})
-                          </SelectItem>
-                        ))}
+                        {players.map(p => <SelectItem key={p.id} value={p.id} className="text-white">{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {resultData.scorers.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {resultData.scorers.map((scorerId, index) => {
-                          const player = players.find(p => p.id === scorerId);
-                          return (
-                            <Badge 
-                              key={index}
-                              className="bg-gold/20 text-gold border-gold/30 cursor-pointer hover:bg-red-500/20 hover:text-red-400"
-                              onClick={() => handleRemoveScorer(index)}
-                            >
-                              ⚽ {player?.name} ×
-                            </Badge>
-                          );
+                      <div className="flex flex-wrap gap-2">
+                        {resultData.scorers.map((id, i) => {
+                          const p = players.find(x => x.id === id);
+                          return <Badge key={i} className="bg-gold/20 text-gold cursor-pointer hover:bg-red-500/20" onClick={() => handleRemoveScorer(i)}>⚽ {p?.name} ×</Badge>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Assists */}
+                {resultData.goalsFor > 0 && players.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="font-heading uppercase tracking-wider text-xs text-zinc-500">
+                      Assistências ({resultData.assisters.length})
+                    </Label>
+                    <Select onValueChange={handleAddAssister}>
+                      <SelectTrigger className="bg-black/50 border-white/10 text-white"><SelectValue placeholder="Adicionar assistente" /></SelectTrigger>
+                      <SelectContent className="bg-[#1a1a1a] border-white/10">
+                        {players.map(p => <SelectItem key={p.id} value={p.id} className="text-white">{p.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {resultData.assisters.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {resultData.assisters.map((id, i) => {
+                          const p = players.find(x => x.id === id);
+                          return <Badge key={i} className="bg-blue-500/20 text-blue-400 cursor-pointer hover:bg-red-500/20" onClick={() => handleRemoveAssister(i)}>🎯 {p?.name} ×</Badge>;
                         })}
                       </div>
                     )}
