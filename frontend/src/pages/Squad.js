@@ -31,6 +31,8 @@ import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { PlayerAvatar } from '../components/ImageFallback';
 import { toast } from 'sonner';
 
+import { Textarea } from '../components/ui/textarea';
+
 const emptyPlayer = {
   name: '',
   position: '',
