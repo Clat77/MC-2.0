@@ -632,6 +632,30 @@ export const Squad = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Batch Add Dialog */}
+      <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+        <DialogContent className="bg-[#0f0f0f] border-white/10 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-white uppercase">Adicionar em Lote</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-zinc-500">Formato: Nome, Posição, OVR (um por linha)</p>
+            <Textarea
+              data-testid="batch-players-textarea"
+              value={batchText}
+              onChange={(e) => setBatchText(e.target.value)}
+              placeholder="Erling Haaland, CA, 91&#10;Kevin De Bruyne, MEI, 90&#10;Ederson, GOL, 88"
+              rows={8}
+              className="bg-black/50 border-white/10 text-white font-mono text-sm"
+            />
+          </div>
+          <DialogFooter className="pt-4 border-t border-white/5">
+            <Button variant="outline" onClick={() => setBatchDialogOpen(false)} className="border-zinc-700 text-zinc-300">Cancelar</Button>
+            <Button data-testid="process-batch-btn" onClick={handleBatchAdd} className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase">Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
