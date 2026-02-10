@@ -151,20 +151,10 @@ export const checkRivalries = (matches) => {
   return rivalries;
 };
 
-// Get next match
+// Get next match - simply find first unplayed match
 export const getNextMatch = (matches) => {
   if (!matches || matches.length === 0) return null;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const upcoming = matches
-    .filter(m => !m.played && m.date)
-    .map(m => ({ ...m, dateObj: parseISO(m.date) }))
-    .filter(m => isValid(m.dateObj) && m.dateObj >= today)
-    .sort((a, b) => a.dateObj - b.dateObj);
-  
-  return upcoming[0] || null;
+  return matches.find(m => !m.played) || null;
 };
 
 // Parse calendar import format (DD/MM;Adversário;Competição;C ou F)
