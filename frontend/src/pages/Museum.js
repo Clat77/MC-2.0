@@ -138,17 +138,16 @@ const SeasonHistoryCard = ({ season }) => (
 );
 
 export const Museum = () => {
-  const { currentSave, addTrophy, endSeason } = useGame();
+  const { currentSave, addTrophy, endSeasonStay, endSeasonLeave } = useGame();
   const [addTrophyOpen, setAddTrophyOpen] = useState(false);
   const [endSeasonConfirm, setEndSeasonConfirm] = useState(false);
-  const [trophyData, setTrophyData] = useState({
-    name: '',
-    type: '',
-  });
+  const [leaveTeamDialog, setLeaveTeamDialog] = useState(false);
+  const [newTeamData, setNewTeamData] = useState({ team: { name: '' }, league: null, season: '' });
+  const [trophyData, setTrophyData] = useState({ name: '', type: '' });
 
   const trophies = currentSave?.trophies || [];
   const players = currentSave?.players || [];
-  const seasonHistory = currentSave?.seasonHistory || [];
+  const careerHistory = currentSave?.careerHistory || [];
 
   // Find hall of fame players
   const hallOfFame = useMemo(() => {
