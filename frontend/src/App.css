@@ -85,3 +85,16 @@ img {
 [data-orientation="horizontal"] > span:first-child {
   background: linear-gradient(to right, #D4AF37, #aa8c2c);
 }
+
+/* Mobile Table Scroll */
+.table-scroll-container {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .table-scroll-container table {
+    min-width: 700px;
+  }
+}
