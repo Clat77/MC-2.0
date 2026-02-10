@@ -245,6 +245,8 @@ export const Squad = () => {
   const { currentSave, addPlayer, updatePlayer, deletePlayer, setCaptain, setViceCaptain } = useGame();
   const [view, setView] = useState('list');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [batchText, setBatchText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [formData, setFormData] = useState(emptyPlayer);
