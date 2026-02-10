@@ -179,9 +179,21 @@ export const Museum = () => {
   };
 
   const handleEndSeason = () => {
-    endSeason();
+    endSeasonStay();
     setEndSeasonConfirm(false);
     toast.success('Temporada encerrada! Nova temporada iniciada.');
+  };
+
+  const handleLeaveTeam = () => {
+    if (!newTeamData.team.name || !newTeamData.league || !newTeamData.season) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+    endSeasonLeave(newTeamData);
+    setLeaveTeamDialog(false);
+    setEndSeasonConfirm(false);
+    setNewTeamData({ team: { name: '' }, league: null, season: '' });
+    toast.success('Novo desafio! Boa sorte no novo clube!');
   };
 
   return (
