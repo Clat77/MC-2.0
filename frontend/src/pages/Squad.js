@@ -328,6 +328,24 @@ export const Squad = () => {
 
   const isFormValid = formData.name && formData.position && formData.overall;
 
+  const handleBatchAdd = () => {
+    if (!batchText.trim()) { toast.error('Cole os dados'); return; }
+    const lines = batchText.trim().split('\n');
+    let added = 0;
+    lines.forEach(line => {
+      const parts = line.split(',').map(p => p.trim());
+      if (parts.length >= 3) {
+        const [name, position, overall] = parts;
+        if (name && position && overall) {
+          addPlayer({ name, position: position.toUpperCase(), overall: parseInt(overall) || 60, potential: parseInt(parts[3]) || parseInt(overall) || 60, age: parseInt(parts[4]) || 25 });
+          added++;
+        }
+      }
+    });
+    if (added > 0) { toast.success(`${added} jogadores adicionados!`); setBatchDialogOpen(false); setBatchText(''); }
+    else { toast.error('Formato: Nome, Posição, OVR'); }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="squad-page">
       {/* Header */}
