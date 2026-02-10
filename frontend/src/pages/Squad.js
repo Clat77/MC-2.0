@@ -127,6 +127,7 @@ const PlayerRow = ({ player, onEdit, onDelete, onSetCaptain, onSetViceCaptain })
       </TableCell>
       <TableCell className="text-zinc-400">{player.games || 0}</TableCell>
       <TableCell className="text-zinc-400">{player.goals || 0}</TableCell>
+      <TableCell className="text-zinc-400">{player.assists || 0}</TableCell>
       <TableCell>
         <span className={`font-heading font-bold ${avgRating >= 7.5 ? 'text-green-400' : avgRating >= 6 ? 'text-gold' : avgRating !== '-' ? 'text-red-400' : 'text-zinc-600'}`}>
           {avgRating}
