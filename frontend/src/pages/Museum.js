@@ -23,6 +23,8 @@ import { ScrollArea } from '../components/ui/scroll-area';
 import { PlayerAvatar } from '../components/ImageFallback';
 import { toast } from 'sonner';
 
+import { LEAGUES } from '../data/constants';
+
 const TROPHY_TYPES = [
   'Liga',
   'Copa Nacional',
