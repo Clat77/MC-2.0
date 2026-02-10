@@ -370,6 +370,15 @@ export const Squad = () => {
           </Tabs>
           
           <Button
+            data-testid="batch-add-btn"
+            variant="outline"
+            onClick={() => setBatchDialogOpen(true)}
+            className="border-gold/30 text-gold hover:bg-gold/10 font-heading uppercase"
+          >
+            <Users size={18} className="mr-2" />
+            Em Lote
+          </Button>
+          <Button
             data-testid="add-player-btn"
             onClick={() => handleOpenDialog()}
             className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase tracking-widest"
