@@ -406,6 +406,8 @@ export const GameProvider = ({ children }) => {
     
     // Season management
     endSeason,
+    endSeasonStay,
+    endSeasonLeave,
   };
 
   return (
