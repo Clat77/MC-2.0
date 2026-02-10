@@ -296,19 +296,19 @@ export const Museum = () => {
         </CardContent>
       </Card>
 
-      {/* Season History */}
+      {/* Career History */}
       <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
         <CardHeader>
           <CardTitle className="font-heading text-xl text-zinc-300 uppercase tracking-wider flex items-center gap-2">
             <History className="w-6 h-6" />
-            Histórico de Temporadas
+            Histórico da Carreira
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {seasonHistory.length > 0 ? (
+          {careerHistory.length > 0 ? (
             <ScrollArea className="max-h-[400px]">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-                {[...seasonHistory].reverse().map((season, i) => (
+                {[...careerHistory].reverse().map((season, i) => (
                   <SeasonHistoryCard key={i} season={season} />
                 ))}
               </div>
