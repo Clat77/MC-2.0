@@ -204,6 +204,8 @@ export const Matches = () => {
     tactic: '',
     playerRatings: {},
     scorers: [],
+    assisters: [],
+    startingXI: [],
   });
 
   const matches = currentSave?.matches || [];
@@ -221,6 +223,8 @@ export const Matches = () => {
       tactic: '',
       playerRatings: {},
       scorers: [],
+      assisters: [],
+      startingXI: [],
     });
   };
 
