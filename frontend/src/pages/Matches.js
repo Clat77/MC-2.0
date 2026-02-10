@@ -255,6 +255,23 @@ export const Matches = () => {
     }));
   };
 
+  const handleAddAssister = (playerId) => {
+    setResultData(prev => ({ ...prev, assisters: [...prev.assisters, playerId] }));
+  };
+
+  const handleRemoveAssister = (index) => {
+    setResultData(prev => ({ ...prev, assisters: prev.assisters.filter((_, i) => i !== index) }));
+  };
+
+  const handleToggleStarter = (playerId) => {
+    setResultData(prev => ({
+      ...prev,
+      startingXI: prev.startingXI.includes(playerId) 
+        ? prev.startingXI.filter(id => id !== playerId)
+        : prev.startingXI.length < 11 ? [...prev.startingXI, playerId] : prev.startingXI
+    }));
+  };
+
   // Stats
   const wins = playedMatches.filter(m => m.goalsFor > m.goalsAgainst).length;
   const draws = playedMatches.filter(m => m.goalsFor === m.goalsAgainst).length;
