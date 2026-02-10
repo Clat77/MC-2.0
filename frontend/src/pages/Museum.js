@@ -422,31 +422,55 @@ export const Museum = () => {
               Encerrar Temporada?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
-              Esta ação irá:
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Arquivar todas as estatísticas da temporada atual</li>
-                <li>Zerar gols, jogos e notas de todos os jogadores</li>
-                <li>Manter badges de Ídolo/Lenda conquistados</li>
-                <li>Incrementar o ano da temporada</li>
-                <li>Limpar o calendário de partidas</li>
-              </ul>
-              <p className="mt-3 text-orange-400">Esta ação não pode ser desfeita!</p>
+              O que deseja fazer?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              data-testid="confirm-end-season-btn"
+          <div className="space-y-3 py-4">
+            <Button
               onClick={handleEndSeason}
-              className="bg-blood hover:bg-blood-dark text-white"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-heading uppercase"
             >
-              Encerrar Temporada
-            </AlertDialogAction>
+              Permanecer no {currentSave?.team?.name}
+            </Button>
+            <Button
+              onClick={() => { setEndSeasonConfirm(false); setLeaveTeamDialog(true); }}
+              className="w-full bg-blood hover:bg-blood-dark text-white font-heading uppercase"
+            >
+              Mudar de Time
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="w-full bg-zinc-800 text-white border-zinc-700">Cancelar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Leave Team Dialog */}
+      <Dialog open={leaveTeamDialog} onOpenChange={setLeaveTeamDialog}>
+        <DialogContent className="bg-[#0f0f0f] border-white/10 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-white uppercase">Novo Desafio</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div><Label className="text-xs text-zinc-500 uppercase">Nome do Novo Clube</Label>
+              <Input value={newTeamData.team.name} onChange={(e) => setNewTeamData(p => ({ ...p, team: { name: e.target.value } }))} placeholder="Ex: Real Madrid" className="bg-black/50 border-white/10 text-white" />
+            </div>
+            <div><Label className="text-xs text-zinc-500 uppercase">Liga</Label>
+              <Select value={newTeamData.league?.name || ''} onValueChange={(v) => setNewTeamData(p => ({ ...p, league: LEAGUES.find(l => l.name === v) }))}>
+                <SelectTrigger className="bg-black/50 border-white/10 text-white"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-white/10">{LEAGUES.map(l => <SelectItem key={l.name} value={l.name} className="text-white">{l.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label className="text-xs text-zinc-500 uppercase">Temporada</Label>
+              <Input value={newTeamData.season} onChange={(e) => setNewTeamData(p => ({ ...p, season: e.target.value }))} placeholder="2027/28" className="bg-black/50 border-white/10 text-white" />
+            </div>
+          </div>
+          <DialogFooter className="pt-4 border-t border-white/5">
+            <Button variant="outline" onClick={() => setLeaveTeamDialog(false)} className="border-zinc-700 text-zinc-300">Cancelar</Button>
+            <Button onClick={handleLeaveTeam} className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase">Começar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
