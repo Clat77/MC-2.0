@@ -428,6 +428,7 @@ export const Squad = () => {
                   <TableHead className="font-heading uppercase tracking-wider text-zinc-500">POT</TableHead>
                   <TableHead className="font-heading uppercase tracking-wider text-zinc-500">Jogos</TableHead>
                   <TableHead className="font-heading uppercase tracking-wider text-zinc-500">Gols</TableHead>
+                  <TableHead className="font-heading uppercase tracking-wider text-zinc-500">Ass</TableHead>
                   <TableHead className="font-heading uppercase tracking-wider text-zinc-500">Média</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
