@@ -447,7 +447,7 @@ export const Squad = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-12">
+                    <TableCell colSpan={10} className="text-center py-12">
                       <User className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
                       <p className="text-zinc-500">Nenhum jogador cadastrado</p>
                     </TableCell>
