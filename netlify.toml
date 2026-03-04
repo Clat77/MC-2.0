@@ -1,0 +1,7 @@
+[build]
+  command = "cd frontend && npm install && npm run build"
+  publish = "frontend/build"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
