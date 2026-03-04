@@ -1,43 +1,68 @@
+// frontend/src/pages/Dashboard.js
 import React, { useState, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { NEWSPAPER_HEADLINES } from '../data/constants';
-import { 
-  getFormArray, 
-  checkSquadDepth, 
-  checkRivalries, 
-  getNextMatch, 
+import {
+  getFormArray,
+  checkSquadDepth,
+  checkRivalries,
+  getNextMatch,
   getDaysUntil,
-  formatDateLong 
+  formatDateLong
 } from '../utils/helpers';
-import { 
-  RefreshCw, 
-  AlertTriangle, 
+import {
+  RefreshCw,
+  AlertTriangle,
   Calendar,
   Skull,
-  Baby,
   Users,
   Trophy,
   TrendingUp,
   Target,
-  Newspaper
+  Newspaper,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
-import { TeamLogo } from '../components/ImageFallback';
 
-const NewspaperCard = ({ team, coach, onRefresh }) => {
+const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+const getNextMatchId = (matches = []) => {
+  const unplayed = matches.filter(m => !m.played);
+  if (unplayed.length === 0) return null;
+
+  const sorted = [...unplayed].sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : new Date(a.createdAt || 0).getTime();
+    const db = b.date ? new Date(b.date).getTime() : new Date(b.createdAt || 0).getTime();
+    return da - db;
+  });
+
+  return sorted[0]?.id || null;
+};
+
+const NewspaperCard = ({ team, coach, aiHeadlines, onRefresh }) => {
   const [headline, setHeadline] = useState(() => {
-    const template = NEWSPAPER_HEADLINES[Math.floor(Math.random() * NEWSPAPER_HEADLINES.length)];
+    if (Array.isArray(aiHeadlines) && aiHeadlines.length > 0) {
+      return pickRandom(aiHeadlines);
+    }
+    const template = pickRandom(NEWSPAPER_HEADLINES);
     return template.replace('{team}', team).replace('{coach}', coach);
   });
 
   const generateNewHeadline = () => {
-    const template = NEWSPAPER_HEADLINES[Math.floor(Math.random() * NEWSPAPER_HEADLINES.length)];
+    if (Array.isArray(aiHeadlines) && aiHeadlines.length > 0) {
+      setHeadline(pickRandom(aiHeadlines));
+      onRefresh?.();
+      return;
+    }
+    const template = pickRandom(NEWSPAPER_HEADLINES);
     setHeadline(template.replace('{team}', team).replace('{coach}', coach));
     onRefresh?.();
   };
+
+  const badgeLabel = (Array.isArray(aiHeadlines) && aiHeadlines.length > 0) ? "IA" : "TEMPLATE";
 
   return (
     <Card className="newspaper-bg border-none relative overflow-hidden">
@@ -47,191 +72,26 @@ const NewspaperCard = ({ team, coach, onRefresh }) => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
               <Newspaper className="w-5 h-5 text-amber-800" />
-              <span className="font-heading uppercase tracking-[0.3em] text-xs text-amber-800">
-                Gazeta Esportiva
-              </span>
+              <span className="font-heading uppercase tracking-[0.3em] text-xs text-amber-900/80">NOTÍCIAS DO DIA</span>
+              <Badge className="bg-amber-900/10 text-amber-900 border border-amber-900/20">{badgeLabel}</Badge>
             </div>
-            <h2 className="font-accent text-2xl md:text-3xl text-zinc-900 leading-tight">
-              "{headline}"
-            </h2>
-            <p className="text-xs text-zinc-600 mt-3 font-body">
-              Edição de hoje • Exclusivo
+            <h3 className="font-heading font-black text-2xl text-amber-950 leading-tight">
+              {headline}
+            </h3>
+            <p className="text-amber-900/70 text-sm mt-2">
+              {team} • Técnico: {coach}
             </p>
           </div>
+
           <Button
-            data-testid="refresh-headline-btn"
-            variant="ghost"
-            size="icon"
             onClick={generateNewHeadline}
-            className="text-amber-800 hover:bg-amber-200/50"
+            variant="outline"
+            className="border-amber-900/20 text-amber-950 hover:bg-amber-900/10"
           >
-            <RefreshCw size={18} />
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Atualizar
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const FormDisplay = ({ form }) => {
-  if (!form || form.length === 0) {
-    return (
-      <div className="flex items-center gap-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
-            <span className="text-xs text-zinc-600">-</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      {form.map((result, i) => (
-        <div
-          key={i}
-          className={`
-            w-8 h-8 rounded-full flex items-center justify-center font-heading font-bold text-sm
-            ${result === 'V' ? 'bg-green-500 text-white' : ''}
-            ${result === 'E' ? 'bg-zinc-500 text-white' : ''}
-            ${result === 'D' ? 'bg-red-500 text-white' : ''}
-          `}
-        >
-          {result}
-        </div>
-      ))}
-      {[...Array(Math.max(0, 5 - form.length))].map((_, i) => (
-        <div key={`empty-${i}`} className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
-          <span className="text-xs text-zinc-600">-</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const NextMatchCard = ({ match }) => {
-  if (!match) {
-    return (
-      <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="font-heading text-lg text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Próxima Partida
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-zinc-600 text-sm">Nenhuma partida agendada</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const daysUntil = getDaysUntil(match.date);
-
-  return (
-    <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-gold/20 gold-glow">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-heading text-lg text-gold uppercase tracking-wider flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Próxima Partida
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-heading font-bold text-xl text-white">
-              {match.isHome ? 'vs' : '@'} {match.opponent}
-            </p>
-            <p className="text-sm text-zinc-500">{match.competition}</p>
-          </div>
-          {daysUntil !== null && (
-            <div className="text-right">
-              <p className="text-3xl font-heading font-bold text-gold">{daysUntil}</p>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">dias</p>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <Badge variant={match.isHome ? 'default' : 'secondary'} className={match.isHome ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-zinc-700 text-zinc-300'}>
-            {match.isHome ? 'Casa' : 'Fora'}
-          </Badge>
-          <span className="text-zinc-500">{formatDateLong(match.date)}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const AlertsCard = ({ alerts }) => {
-  if (alerts.length === 0) return null;
-
-  return (
-    <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-orange-500/30">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-heading text-lg text-orange-400 uppercase tracking-wider flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5" />
-          Alertas
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {alerts.map((alert, i) => (
-          <div key={i} className="flex items-center gap-3 text-sm">
-            {alert.icon}
-            <span className="text-zinc-300">{alert.message}</span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-};
-
-const StatsCard = ({ title, value, subtitle, icon: Icon, color = 'gold' }) => (
-  <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5 hover:border-gold/20 transition-all">
-    <CardContent className="p-4 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded flex items-center justify-center bg-${color}/10`}>
-        <Icon className={`w-6 h-6 text-${color}`} />
-      </div>
-      <div>
-        <p className={`text-2xl font-heading font-bold ${color === 'gold' ? 'text-gold' : `text-${color}-400`}`}>
-          {value}
-        </p>
-        <p className="text-xs text-zinc-500 uppercase tracking-wider">{title}</p>
-        {subtitle && <p className="text-xs text-zinc-600">{subtitle}</p>}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const RivalriesCard = ({ rivalries }) => {
-  if (rivalries.length === 0) return null;
-
-  return (
-    <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-heading text-lg text-zinc-300 uppercase tracking-wider">
-          Rivalidades Ativas
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {rivalries.map((rivalry, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded bg-zinc-900/50">
-            {rivalry.type === 'carrasco' ? (
-              <Skull className="w-6 h-6 text-blood" />
-            ) : (
-              <Baby className="w-6 h-6 text-green-400" />
-            )}
-            <div className="flex-1">
-              <p className="font-heading font-semibold text-white">{rivalry.opponent}</p>
-              <p className="text-xs text-zinc-500">
-                {rivalry.type === 'carrasco' ? 'Carrasco - 3 derrotas seguidas' : 'Freguês - 3 vitórias seguidas'}
-              </p>
-            </div>
-            <Badge className={rivalry.type === 'carrasco' ? 'bg-blood/20 text-red-400 border-blood/30' : 'bg-green-500/20 text-green-400 border-green-500/30'}>
-              {rivalry.type === 'carrasco' ? 'Carrasco' : 'Freguês'}
-            </Badge>
-          </div>
-        ))}
       </CardContent>
     </Card>
   );
@@ -240,158 +100,190 @@ const RivalriesCard = ({ rivalries }) => {
 export const Dashboard = () => {
   const { currentSave } = useGame();
 
-  const form = useMemo(() => getFormArray(currentSave?.matches || []), [currentSave?.matches]);
-  const nextMatch = useMemo(() => getNextMatch(currentSave?.matches || []), [currentSave?.matches]);
-  const weakPositions = useMemo(() => checkSquadDepth(currentSave?.players || []), [currentSave?.players]);
-  const rivalries = useMemo(() => checkRivalries(currentSave?.matches || []), [currentSave?.matches]);
+  const players = currentSave?.players || [];
+  const matches = currentSave?.matches || [];
+  const trophies = currentSave?.trophies || [];
+  const events = currentSave?.events || [];
 
-  // Calculate stats
-  const playedMatches = (currentSave?.matches || []).filter(m => m.played);
-  const wins = playedMatches.filter(m => m.goalsFor > m.goalsAgainst).length;
-  const draws = playedMatches.filter(m => m.goalsFor === m.goalsAgainst).length;
-  const losses = playedMatches.filter(m => m.goalsFor < m.goalsAgainst).length;
-  const goalsFor = playedMatches.reduce((sum, m) => sum + m.goalsFor, 0);
-  const goalsAgainst = playedMatches.reduce((sum, m) => sum + m.goalsAgainst, 0);
-  const winRate = playedMatches.length > 0 ? Math.round((wins / playedMatches.length) * 100) : 0;
+  const teamName = currentSave?.team?.name || 'Seu Time';
+  const coachName = currentSave?.coach?.name || 'Técnico';
 
-  // Build alerts
-  const alerts = [];
-  if (weakPositions.length > 0) {
-    alerts.push({
-      icon: <Users className="w-5 h-5 text-orange-400" />,
-      message: `Falta de profundidade: ${weakPositions.join(', ')}`,
-    });
-  }
-  rivalries.filter(r => r.type === 'carrasco').forEach(r => {
-    alerts.push({
-      icon: <Skull className="w-5 h-5 text-blood" />,
-      message: `${r.opponent} é seu carrasco!`,
-    });
-  });
+  const aiHeadlines = currentSave?.aiHeadlines || [];
+
+  // ✅ contador só pro gerador de eventos IA
+  const nextMatchId = useMemo(() => getNextMatchId(matches), [matches]);
+  const aiEventUsage = currentSave?.aiEventUsage || {};
+  const usedEventThisMatch = nextMatchId ? (aiEventUsage[nextMatchId] || 0) : 0;
+  const remainingEvent = Math.max(0, 3 - usedEventThisMatch);
+
+  const formArray = useMemo(() => getFormArray(matches), [matches]);
+  const nextMatch = useMemo(() => getNextMatch(matches), [matches]);
+
+  const squadDepth = useMemo(() => checkSquadDepth(players), [players]);
+  const rivalries = useMemo(() => checkRivalries(matches), [matches]);
+
+  const totalEvents = events.length;
+  const criticalEvents = events.filter(e => e.severity === 'critical' || e.severity === 'high').length;
+
+  const trophiesWon = trophies.length;
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="dashboard-page">
-      {/* Team Header */}
-      <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-zinc-900/50 to-transparent rounded border-l-4 border-gold">
-        <TeamLogo 
-          src={currentSave?.team?.logo} 
-          name={currentSave?.team?.name} 
-          size="xl" 
-        />
-        <div>
-          <h1 className="font-heading font-bold text-3xl md:text-4xl text-white uppercase tracking-tight">
-            {currentSave?.team?.name}
-          </h1>
-          <p className="text-zinc-400 mt-1">
-            Técnico: <span className="text-gold">{currentSave?.coach?.name}</span>
-          </p>
-          <Badge className="mt-2 bg-gold/20 text-gold border-gold/30 font-heading tracking-wider">
-            {currentSave?.season}
-          </Badge>
-        </div>
+      <div>
+        <h1 className="font-heading font-bold text-3xl text-white uppercase tracking-tight">
+          Dashboard
+        </h1>
+        <p className="text-zinc-500">Visão geral do seu modo carreira</p>
       </div>
 
-      {/* Newspaper Headline */}
-      <NewspaperCard 
-        team={currentSave?.team?.name || 'Time'} 
-        coach={currentSave?.coach?.name || 'Técnico'} 
+      <NewspaperCard
+        team={teamName}
+        coach={coachName}
+        aiHeadlines={aiHeadlines}
+        onRefresh={() => {}}
       />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Jogos" value={playedMatches.length} icon={Target} />
-        <StatsCard 
-          title="Vitórias" 
-          value={wins} 
-          subtitle={`${draws}E ${losses}D`}
-          icon={Trophy} 
-          color="green"
-        />
-        <StatsCard 
-          title="Aproveitamento" 
-          value={`${winRate}%`} 
-          icon={TrendingUp} 
-        />
-        <StatsCard 
-          title="Saldo" 
-          value={goalsFor - goalsAgainst > 0 ? `+${goalsFor - goalsAgainst}` : goalsFor - goalsAgainst} 
-          subtitle={`${goalsFor} GP / ${goalsAgainst} GC`}
-          icon={Target}
-          color={goalsFor >= goalsAgainst ? 'green' : 'red'}
-        />
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Form & Next Match */}
-        <div className="space-y-6">
-          <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="font-heading text-lg text-zinc-300 uppercase tracking-wider">
-                Últimos 5 Jogos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FormDisplay form={form} />
-            </CardContent>
-          </Card>
-
-          <NextMatchCard match={nextMatch} />
-        </div>
-
-        {/* Alerts & Rivalries */}
-        <div className="space-y-6">
-          <AlertsCard alerts={alerts} />
-          <RivalriesCard rivalries={rivalries} />
-          
-          {alerts.length === 0 && rivalries.length === 0 && (
-            <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
-              <CardContent className="p-8 text-center">
-                <Trophy className="w-12 h-12 text-gold mx-auto mb-4" />
-                <p className="text-zinc-400">
-                  Tudo tranquilo! Foque nos treinos e nas próximas partidas.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Season Progress */}
+      {/* ✅ contador no topo */}
       <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
         <CardHeader className="pb-2">
-          <CardTitle className="font-heading text-lg text-zinc-300 uppercase tracking-wider">
-            Progresso da Temporada
+          <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-gold" /> IA do Escritório
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-500">Jogos disputados</span>
-            <span className="text-gold font-heading">{playedMatches.length} / {(currentSave?.matches || []).length || 0}</span>
+        <CardContent className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-white font-heading font-bold">
+              Eventos IA disponíveis:{" "}
+              <span className="text-gold">{nextMatchId ? `${remainingEvent}/3` : "∞"}</span>
+            </p>
+            <p className="text-xs text-zinc-500">
+              {nextMatchId
+                ? `Antes do próximo jogo (ID: ${String(nextMatchId)}).`
+                : "Sem próxima partida cadastrada — sem limite."}
+            </p>
           </div>
-          <Progress 
-            value={(currentSave?.matches || []).length > 0 
-              ? (playedMatches.length / (currentSave?.matches || []).length) * 100 
-              : 0
-            } 
-            className="h-2 bg-zinc-800"
-          />
-          <div className="grid grid-cols-3 gap-4 text-center pt-4 border-t border-white/5">
-            <div>
-              <p className="text-2xl font-heading font-bold text-green-400">{wins}</p>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Vitórias</p>
-            </div>
-            <div>
-              <p className="text-2xl font-heading font-bold text-zinc-400">{draws}</p>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Empates</p>
-            </div>
-            <div>
-              <p className="text-2xl font-heading font-bold text-red-400">{losses}</p>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Derrotas</p>
-            </div>
-          </div>
+
+          <Badge className="bg-zinc-900/50 text-zinc-200 border border-white/10">
+            Usados: {nextMatchId ? usedEventThisMatch : 0}
+          </Badge>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+              <Users className="w-4 h-4" /> Elenco
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-heading font-bold text-white">{players.length}</p>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider">Jogadores cadastrados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Próximo Jogo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {nextMatch ? (
+              <>
+                <p className="text-lg font-heading font-bold text-white">{nextMatch.opponent}</p>
+                <p className="text-xs text-zinc-500">{formatDateLong(nextMatch.date)} • em {getDaysUntil(nextMatch.date)} dias</p>
+              </>
+            ) : (
+              <p className="text-zinc-500">Sem jogo marcado</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Escritório
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-heading font-bold text-white">{totalEvents}</p>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider">{criticalEvents} graves/críticos</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+              <Trophy className="w-4 h-4" /> Títulos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-heading font-bold text-white">{trophiesWon}</p>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider">Conquistas</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" /> Forma recente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              {formArray.map((f, i) => (
+                <Badge key={i} className={`px-3 py-1 ${f === 'W' ? 'bg-green-600/20 text-green-400 border border-green-500/20' : f === 'D' ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/20' : 'bg-red-600/20 text-red-400 border border-red-500/20'}`}>
+                  {f}
+                </Badge>
+              ))}
+              {formArray.length === 0 && <p className="text-zinc-500">Sem jogos ainda</p>}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Target className="w-5 h-5" /> Profundidade do elenco
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {squadDepth.map((d, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-300">{d.position}</span>
+                  <span className="text-zinc-500">{d.count} jogadores</span>
+                </div>
+                <Progress value={Math.min(100, d.count * 20)} />
+              </div>
+            ))}
+            {squadDepth.length === 0 && <p className="text-zinc-500">Cadastre jogadores pra ver isso</p>}
+          </CardContent>
+        </Card>
+      </div>
+
+      {rivalries.length > 0 && (
+        <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Skull className="w-5 h-5" /> Rivalidades / Clima
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {rivalries.map((r, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-zinc-300">{r.label}</span>
+                  <Badge className="bg-red-600/20 text-red-400 border border-red-500/20">{r.level}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
