@@ -153,10 +153,7 @@ Responda em texto normal (não JSON).
 
 async function callGroqDirect({ task, payload = {}, context = {}, temperature = 0.8 }) {
   const apiKey = process.env.REACT_APP_GROQ_API_KEY;
-
-  // usa um modelo atual listado pela Groq
-  const model =
-    process.env.REACT_APP_GROQ_MODEL || "llama-3.3-70b-versatile";
+  const model = process.env.REACT_APP_GROQ_MODEL || "llama-3.3-70b-versatile";
 
   if (!apiKey) {
     throw new Error("REACT_APP_GROQ_API_KEY não foi definida.");
@@ -181,7 +178,6 @@ async function callGroqDirect({ task, payload = {}, context = {}, temperature = 
     }),
   });
 
-  // lê o body UMA vez só
   const rawText = await res.text();
 
   let data;
