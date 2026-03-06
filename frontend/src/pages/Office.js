@@ -1,5 +1,5 @@
 // frontend/src/pages/Office.js
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { EVENTS, getSeverityColor, getSeverityLabel } from '../data/events';
 import {
@@ -26,7 +26,7 @@ import { callOfficeAI } from '../utils/aiClient';
 const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 const getNextMatchId = (matches = []) => {
-  const unplayed = matches.filter(m => !m.played);
+  const unplayed = matches.filter((m) => !m.played);
   if (unplayed.length === 0) return null;
 
   const sorted = [...unplayed].sort((a, b) => {
@@ -39,10 +39,18 @@ const getNextMatchId = (matches = []) => {
 };
 
 const computeMoment = (matches = []) => {
-  const played = matches.filter(m => m.played);
+  const played = matches.filter((m) => m.played);
   const last5 = played.slice(-5);
+
   if (last5.length === 0) {
-    return { vibe: "neutro", summary: "Sem jogos ainda — tudo aberto.", points: 0 };
+    return {
+      vibe: 'neutro',
+      summary: 'Sem jogos ainda — tudo aberto.',
+      points: 0,
+      gf: 0,
+      ga: 0,
+      gd: 0,
+    };
   }
 
   let pts = 0;
@@ -52,20 +60,27 @@ const computeMoment = (matches = []) => {
   for (const m of last5) {
     gf += Number(m.goalsFor || 0);
     ga += Number(m.goalsAgainst || 0);
-    if (m.goalsFor > m.goalsAgainst) pts += 3;
-    else if (m.goalsFor === m.goalsAgainst) pts += 1;
+
+    if (Number(m.goalsFor) > Number(m.goalsAgainst)) pts += 3;
+    else if (Number(m.goalsFor) === Number(m.goalsAgainst)) pts += 1;
   }
 
   const gd = gf - ga;
 
-  let vibe = "neutro";
-  if (pts >= 11) vibe = "muito boa";
-  else if (pts >= 8) vibe = "boa";
-  else if (pts <= 3) vibe = "péssima";
-  else if (pts <= 5) vibe = "ruim";
+  let vibe = 'neutro';
+  if (pts >= 11) vibe = 'muito boa';
+  else if (pts >= 8) vibe = 'boa';
+  else if (pts <= 3) vibe = 'péssima';
+  else if (pts <= 5) vibe = 'ruim';
 
-  const summary = `Últimos ${last5.length} jogos: ${pts} pts, ${gf} GP, ${ga} GC (saldo ${gd}). Fase: ${vibe}.`;
-  return { vibe, summary, points: pts, gf, ga, gd };
+  return {
+    vibe,
+    summary: `Últimos ${last5.length} jogos: ${pts} pts, ${gf} GP, ${ga} GC (saldo ${gd}). Fase: ${vibe}.`,
+    points: pts,
+    gf,
+    ga,
+    gd,
+  };
 };
 
 const EventCard = ({ event, player }) => {
@@ -75,16 +90,13 @@ const EventCard = ({ event, player }) => {
     <div className={`p-4 rounded border ${colors.bg} ${colors.border} transition-all`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          {player && (
-            <PlayerAvatar src={player.photo} name={player.name} size="sm" />
-          )}
+          {player && <PlayerAvatar src={player.photo} name={player.name} size="sm" />}
           <div>
             <p className="font-heading font-semibold text-white">{event.title}</p>
-            {player && (
-              <p className="text-sm text-zinc-400">{player.name}</p>
-            )}
+            {player && <p className="text-sm text-zinc-400">{player.name}</p>}
           </div>
         </div>
+
         <Badge className={`${colors.bg} ${colors.text} border ${colors.border}`}>
           {getSeverityLabel(event.severity)}
         </Badge>
@@ -93,10 +105,10 @@ const EventCard = ({ event, player }) => {
       <p className="text-sm text-zinc-300 mt-3">{event.description}</p>
 
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
-        <span className="text-xs text-zinc-500">Ação EA: {event.punishment || event.recommendedAction || '—'}</span>
-        {event.createdAt && (
-          <span className="text-xs text-zinc-600">{formatDate(event.createdAt)}</span>
-        )}
+        <span className="text-xs text-zinc-500">
+          Ação EA: {event.punishment || event.recommendedAction || '—'}
+        </span>
+        {event.createdAt && <span className="text-xs text-zinc-600">{formatDate(event.createdAt)}</span>}
       </div>
     </div>
   );
@@ -108,8 +120,21 @@ const EventResultModal = ({ event, player, onClose }) => {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className={`bg-[#0f0f0f] border-2 ${colors.border} max-w-md`}>
-        <div className={`absolute inset-x-0 top-0 h-1 ${event.severity === 'critical' ? 'bg-blood' : event.severity === 'high' ? 'bg-red-500' : event.severity === 'positive' ? 'bg-green-500' : 'bg-orange-500'}`} />
+      <DialogContent
+        aria-describedby="event-result-description"
+        className={`bg-[#0f0f0f] border-2 ${colors.border} max-w-md`}
+      >
+        <div
+          className={`absolute inset-x-0 top-0 h-1 ${
+            event.severity === 'critical'
+              ? 'bg-red-700'
+              : event.severity === 'high'
+              ? 'bg-red-500'
+              : event.severity === 'positive'
+              ? 'bg-green-500'
+              : 'bg-orange-500'
+          }`}
+        />
 
         <DialogHeader className="pt-4">
           <div className="flex items-center gap-2 mb-2">
@@ -118,18 +143,25 @@ const EventResultModal = ({ event, player, onClose }) => {
               {getSeverityLabel(event.severity)}
             </Badge>
           </div>
+
           <DialogTitle className="font-heading font-bold text-2xl text-white uppercase tracking-wider">
             {event.title}
           </DialogTitle>
         </DialogHeader>
 
+        <p id="event-result-description" className="sr-only">
+          Resultado do evento gerado pela inteligência artificial do escritório.
+        </p>
+
         <div className="space-y-4">
           <div className="flex items-center gap-4 p-4 bg-zinc-900/50 rounded">
             <PlayerAvatar src={player?.photo} name={player?.name} size="lg" />
             <div>
-              <p className="font-heading font-bold text-xl text-gold">{player?.name || "Elenco"}</p>
+              <p className="font-heading font-bold text-xl text-gold">{player?.name || 'Elenco'}</p>
               {player?.position && (
-                <p className="text-sm text-zinc-500">{player.position} • {player.overall} OVR</p>
+                <p className="text-sm text-zinc-500">
+                  {player.position} • {player.overall} OVR
+                </p>
               )}
             </div>
           </div>
@@ -142,6 +174,7 @@ const EventResultModal = ({ event, player, onClose }) => {
             <p className="font-heading uppercase tracking-wider text-xs text-zinc-500 mb-1">
               Ação recomendada (EA FC 26)
             </p>
+
             <p className={`font-heading font-bold text-lg ${colors.text}`}>
               {event.punishment || event.recommendedAction || '—'}
             </p>
@@ -150,9 +183,12 @@ const EventResultModal = ({ event, player, onClose }) => {
               <div className="mt-3">
                 <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Outras opções</p>
                 <div className="flex flex-wrap gap-2">
-                  {eaActions.slice(0, 8).map((a, i) => (
-                    <Badge key={i} className="bg-zinc-900/50 text-zinc-200 border border-white/10">
-                      {a}
+                  {eaActions.slice(0, 8).map((action, index) => (
+                    <Badge
+                      key={`${action}-${index}`}
+                      className="bg-zinc-900/50 text-zinc-200 border border-white/10"
+                    >
+                      {action}
                     </Badge>
                   ))}
                 </div>
@@ -190,44 +226,44 @@ export const Office = () => {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isGeneratingEvent, setIsGeneratingEvent] = useState(false);
 
-  const [activePanel, setActivePanel] = useState("event"); // event | headlines | comms | chat
-  const [selectedPastEventId, setSelectedPastEventId] = useState("");
+  const [activePanel, setActivePanel] = useState('event');
+  const [selectedPastEventId, setSelectedPastEventId] = useState('');
   const [commsResult, setCommsResult] = useState(null);
   const [isGeneratingComms, setIsGeneratingComms] = useState(false);
 
   const [headlinesResult, setHeadlinesResult] = useState([]);
   const [isGeneratingHeadlines, setIsGeneratingHeadlines] = useState(false);
 
-  const [chatInput, setChatInput] = useState("");
+  const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState(() => currentSave?.aiChat || []);
   const [isChatting, setIsChatting] = useState(false);
+
+  const [aiStatus, setAiStatus] = useState('checking');
 
   const players = currentSave?.players || [];
   const pastEvents = currentSave?.events || [];
   const matches = currentSave?.matches || [];
 
-  const teamName = currentSave?.team?.name || "Seu Time";
-  const coachName = currentSave?.coach?.name || "Técnico";
+  const teamName = currentSave?.team?.name || 'Seu Time';
+  const coachName = currentSave?.coach?.name || 'Técnico';
 
   const moment = useMemo(() => computeMoment(matches), [matches]);
   const nextMatchId = useMemo(() => getNextMatchId(matches), [matches]);
 
-  // ✅ Limite só pro GERADOR DE EVENTO
   const aiEventUsage = currentSave?.aiEventUsage || {};
-  const usedEventThisMatch = nextMatchId ? (aiEventUsage[nextMatchId] || 0) : 0;
+  const usedEventThisMatch = nextMatchId ? aiEventUsage[nextMatchId] || 0 : 0;
   const remainingEvent = Math.max(0, 3 - usedEventThisMatch);
 
   const selectedPastEvent = useMemo(() => {
-    return pastEvents.find(e => e.id === selectedPastEventId) || null;
+    return pastEvents.find((e) => String(e.id) === String(selectedPastEventId)) || null;
   }, [pastEvents, selectedPastEventId]);
 
   const eventPlayer = (event) => {
     if (!event?.playerId) return null;
-    return players.find(p => String(p.id) === String(event.playerId)) || null;
+    return players.find((p) => String(p.id) === String(event.playerId)) || null;
   };
 
   const buildAIContext = () => {
-    // manda “quase tudo”, mas segura o tamanho do chat
     const safeSave = {
       ...currentSave,
       aiChat: (currentSave?.aiChat || []).slice(-20),
@@ -245,7 +281,7 @@ export const Office = () => {
       seasonHistory: safeSave.seasonHistory,
       moment,
       ui: {
-        screen: "office",
+        screen: 'office',
         teamName,
         coachName,
         nextMatchId,
@@ -253,13 +289,46 @@ export const Office = () => {
     };
   };
 
+  const checkAIConnection = async () => {
+    try {
+      const data = await callOfficeAI({
+        task: 'chat',
+        payload: { message: 'Responda somente: OK' },
+        context: {
+          healthcheck: true,
+          team: { name: teamName },
+          coach: { name: coachName },
+        },
+        temperature: 0,
+      });
+
+      if (data?.ok) {
+        setAiStatus('online');
+      } else {
+        setAiStatus('offline');
+      }
+    } catch (error) {
+      console.error('IA offline:', error);
+      setAiStatus('offline');
+    }
+  };
+
+   useEffect(() => {
+    checkAIConnection();
+  }, []);
+
   const incrementEventUsage = () => {
-    if (!nextMatchId) return; // se não tem próxima partida, não limita
+    if (!nextMatchId) return;
+
     const updated = {
       ...(currentSave?.aiEventUsage || {}),
       [nextMatchId]: (currentSave?.aiEventUsage?.[nextMatchId] || 0) + 1,
     };
-    updateSave({ ...currentSave, aiEventUsage: updated });
+
+    updateSave({
+      ...currentSave,
+      aiEventUsage: updated,
+    });
   };
 
   const generateEventFallback = () => {
@@ -274,24 +343,23 @@ export const Office = () => {
       punishment: eventTemplate.punishment,
       playerId: randomPlayer?.id || null,
       createdAt: new Date().toISOString(),
-      source: "fallback",
+      source: 'fallback',
     };
 
     addEvent(newEvent);
     setGeneratedEvent(newEvent);
     setSelectedPlayer(randomPlayer);
-    toast.success("Evento gerado (fallback)");
+    toast.success('Evento gerado (fallback)');
   };
 
   const generateEventWithAI = async () => {
-    // ✅ limite só aqui
     if (nextMatchId && remainingEvent <= 0) {
-      toast.error("Você já usou os 3 eventos de IA antes da próxima partida.");
+      toast.error('Você já usou os 3 eventos de IA antes da próxima partida.');
       return;
     }
 
     if (players.length === 0) {
-      toast.error("Cadastre jogadores primeiro pra IA conseguir gerar evento massa.");
+      toast.error('Cadastre jogadores primeiro pra IA conseguir gerar evento decente.');
       return;
     }
 
@@ -299,8 +367,9 @@ export const Office = () => {
 
     try {
       const context = buildAIContext();
+
       const data = await callOfficeAI({
-        task: "generate_event",
+        task: 'generate_event',
         payload: {},
         context,
         temperature: 0.9,
@@ -309,42 +378,46 @@ export const Office = () => {
       const parsed = data?.parsed;
 
       if (!parsed) {
-        toast.error("A IA respondeu fora do formato. Vou gerar fallback.");
+        toast.error('A IA respondeu fora do formato. Vou gerar fallback.');
         generateEventFallback();
         return;
       }
 
-      const involvedIds = Array.isArray(parsed.involvedPlayerIds) ? parsed.involvedPlayerIds.map(String) : [];
-      let chosenPlayer =
-        players.find(p => involvedIds.includes(String(p.id))) ||
-        players.find(p => String(p.id) === String(involvedIds[0])) ||
+      const involvedIds = Array.isArray(parsed.involvedPlayerIds)
+        ? parsed.involvedPlayerIds.map(String)
+        : [];
+
+      const chosenPlayer =
+        players.find((p) => involvedIds.includes(String(p.id))) ||
+        players.find((p) => String(p.id) === String(involvedIds[0])) ||
         pickRandom(players);
 
       const newEvent = {
         id: Date.now(),
-        title: parsed.title || "Evento do vestiário",
-        description: parsed.description || "Aconteceu uma situação no elenco.",
-        severity: parsed.severity || "low",
-        punishment: parsed.recommendedAction || "Conversar e advertir",
-        recommendedAction: parsed.recommendedAction || "Conversar e advertir",
+        title: parsed.title || 'Evento do vestiário',
+        description: parsed.description || 'Aconteceu uma situação no elenco.',
+        severity: parsed.severity || 'low',
+        punishment: parsed.recommendedAction || 'Conversar e advertir',
+        recommendedAction: parsed.recommendedAction || 'Conversar e advertir',
         eaActions: Array.isArray(parsed.eaActions) ? parsed.eaActions : [],
-        category: parsed.category || "elenco",
+        category: parsed.category || 'elenco',
         headline: parsed.headline || null,
         playerId: chosenPlayer?.id || null,
         createdAt: new Date().toISOString(),
-        source: "ai",
+        source: 'ai',
       };
 
       addEvent(newEvent);
       setGeneratedEvent(newEvent);
       setSelectedPlayer(chosenPlayer);
-
-      // ✅ contabiliza uso só aqui
       incrementEventUsage();
+      setAiStatus('online');
 
-      toast.success("Evento gerado com IA");
-    } catch (err) {
-      toast.error(`Deu ruim na IA: ${err.message}. Vou no fallback.`);
+      toast.success('Evento gerado com IA');
+    } catch (error) {
+      console.error(error);
+      setAiStatus('offline');
+      toast.error(`Deu ruim na IA: ${error.message}. Vou no fallback.`);
       generateEventFallback();
     } finally {
       setIsGeneratingEvent(false);
@@ -353,10 +426,12 @@ export const Office = () => {
 
   const generateHeadlinesWithAI = async () => {
     setIsGeneratingHeadlines(true);
+
     try {
       const context = buildAIContext();
+
       const data = await callOfficeAI({
-        task: "generate_headlines",
+        task: 'generate_headlines',
         payload: {},
         context,
         temperature: 0.8,
@@ -366,21 +441,23 @@ export const Office = () => {
       const headlines = parsed?.headlines;
 
       if (!Array.isArray(headlines) || headlines.length === 0) {
-        toast.error("Não consegui gerar manchetes agora.");
+        toast.error('Não consegui gerar manchetes agora.');
         return;
       }
 
       setHeadlinesResult(headlines);
+      setAiStatus('online');
 
-      // salva pro Dashboard usar
       updateSave({
         ...currentSave,
         aiHeadlines: headlines,
       });
 
-      toast.success("Manchetes geradas e salvas pro Dashboard");
-    } catch (err) {
-      toast.error(`Deu ruim nas manchetes: ${err.message}`);
+      toast.success('Manchetes geradas e salvas pro Dashboard');
+    } catch (error) {
+      console.error(error);
+      setAiStatus('offline');
+      toast.error(`Deu ruim nas manchetes: ${error.message}`);
     } finally {
       setIsGeneratingHeadlines(false);
     }
@@ -388,7 +465,7 @@ export const Office = () => {
 
   const generateCommsWithAI = async () => {
     if (!selectedPastEvent) {
-      toast.error("Escolhe um evento do histórico primeiro.");
+      toast.error('Escolhe um evento do histórico primeiro.');
       return;
     }
 
@@ -397,23 +474,28 @@ export const Office = () => {
 
     try {
       const context = buildAIContext();
+
       const data = await callOfficeAI({
-        task: "generate_comms",
+        task: 'generate_comms',
         payload: selectedPastEvent,
         context,
         temperature: 0.7,
       });
 
       const parsed = data?.parsed;
+
       if (!parsed?.internalNote || !parsed?.pressRelease) {
-        toast.error("A IA não trouxe os comunicados certinho.");
+        toast.error('A IA não trouxe os comunicados certinho.');
         return;
       }
 
       setCommsResult(parsed);
-      toast.success("Comunicados gerados");
-    } catch (err) {
-      toast.error(`Deu ruim no comunicado: ${err.message}`);
+      setAiStatus('online');
+      toast.success('Comunicados gerados');
+    } catch (error) {
+      console.error(error);
+      setAiStatus('offline');
+      toast.error(`Deu ruim no comunicado: ${error.message}`);
     } finally {
       setIsGeneratingComms(false);
     }
@@ -425,38 +507,41 @@ export const Office = () => {
 
     const newMessages = [
       ...(chatMessages || []),
-      { role: "user", content: msg, createdAt: new Date().toISOString() },
+      { role: 'user', content: msg, createdAt: new Date().toISOString() },
     ];
 
     setChatMessages(newMessages);
-    setChatInput("");
+    setChatInput('');
     setIsChatting(true);
 
     try {
       const context = buildAIContext();
+
       const data = await callOfficeAI({
-        task: "chat",
+        task: 'chat',
         payload: { message: msg },
         context,
         temperature: 0.8,
       });
 
-      const text = data?.text || "Não consegui responder agora.";
+      const text = data?.text || 'Não consegui responder agora.';
 
       const updated = [
         ...newMessages,
-        { role: "assistant", content: text, createdAt: new Date().toISOString() },
+        { role: 'assistant', content: text, createdAt: new Date().toISOString() },
       ];
 
       setChatMessages(updated);
+      setAiStatus('online');
 
-      // salva no save (mantém só as últimas 40 msg pra não explodir)
       updateSave({
         ...currentSave,
         aiChat: updated.slice(-40),
       });
-    } catch (err) {
-      toast.error(`Deu ruim no chat: ${err.message}`);
+    } catch (error) {
+      console.error(error);
+      setAiStatus('offline');
+      toast.error(`Deu ruim no chat: ${error.message}`);
     } finally {
       setIsChatting(false);
     }
@@ -465,9 +550,8 @@ export const Office = () => {
   const HistoryList = () => (
     <ScrollArea className="h-[340px] pr-3">
       <div className="space-y-3">
-        {pastEvents.length === 0 && (
-          <p className="text-zinc-500 text-sm">Nenhum evento ainda.</p>
-        )}
+        {pastEvents.length === 0 && <p className="text-zinc-500 text-sm">Nenhum evento ainda.</p>}
+
         {pastEvents
           .slice()
           .reverse()
@@ -483,78 +567,100 @@ export const Office = () => {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-heading font-bold text-3xl text-white uppercase tracking-tight flex items-center gap-2">
-            <Briefcase className="w-7 h-7 text-gold" /> Escritório
+            <Briefcase className="w-7 h-7 text-gold" />
+            Escritório
           </h1>
-          <p className="text-zinc-500">
+
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {aiStatus === 'checking' && (
+              <span className="text-yellow-400 text-sm font-semibold">
+                🟡 Conectando IA...
+              </span>
+            )}
+
+            {aiStatus === 'online' && (
+              <span className="text-green-400 text-sm font-semibold">
+                🟢 IA conectada
+              </span>
+            )}
+
+            {aiStatus === 'offline' && (
+              <span className="text-red-400 text-sm font-semibold">
+                🔴 IA indisponível
+              </span>
+            )}
+          </div>
+
+          <p className="text-zinc-500 mt-2">
             {teamName} • Técnico: {coachName}
           </p>
-          <p className="text-zinc-400 text-sm mt-1">
-            {moment.summary}
-          </p>
+
+          <p className="text-zinc-400 text-sm mt-1">{moment.summary}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge className="bg-zinc-900/50 text-zinc-200 border border-white/10">
-            Eventos IA: {nextMatchId ? `${remainingEvent}/3 antes do próximo jogo` : "sem limite (sem próxima partida)"}
+            Eventos IA: {nextMatchId ? `${remainingEvent}/3 antes do próximo jogo` : 'sem limite (sem próxima partida)'}
           </Badge>
         </div>
       </div>
 
-      {/* NAV */}
       <div className="flex gap-2 flex-wrap">
         <Button
-          variant={activePanel === "event" ? "default" : "outline"}
-          onClick={() => setActivePanel("event")}
-          className={activePanel === "event" ? "bg-gold text-black hover:bg-gold-dim" : ""}
+          variant={activePanel === 'event' ? 'default' : 'outline'}
+          onClick={() => setActivePanel('event')}
+          className={activePanel === 'event' ? 'bg-gold text-black hover:bg-gold-dim' : ''}
         >
           <Dices className="w-4 h-4 mr-2" />
           Evento IA
         </Button>
 
         <Button
-          variant={activePanel === "headlines" ? "default" : "outline"}
-          onClick={() => setActivePanel("headlines")}
-          className={activePanel === "headlines" ? "bg-gold text-black hover:bg-gold-dim" : ""}
+          variant={activePanel === 'headlines' ? 'default' : 'outline'}
+          onClick={() => setActivePanel('headlines')}
+          className={activePanel === 'headlines' ? 'bg-gold text-black hover:bg-gold-dim' : ''}
         >
           <Newspaper className="w-4 h-4 mr-2" />
           Manchetes
         </Button>
 
         <Button
-          variant={activePanel === "comms" ? "default" : "outline"}
-          onClick={() => setActivePanel("comms")}
-          className={activePanel === "comms" ? "bg-gold text-black hover:bg-gold-dim" : ""}
+          variant={activePanel === 'comms' ? 'default' : 'outline'}
+          onClick={() => setActivePanel('comms')}
+          className={activePanel === 'comms' ? 'bg-gold text-black hover:bg-gold-dim' : ''}
         >
           <FileText className="w-4 h-4 mr-2" />
           Comunicados
         </Button>
 
         <Button
-          variant={activePanel === "chat" ? "default" : "outline"}
-          onClick={() => setActivePanel("chat")}
-          className={activePanel === "chat" ? "bg-gold text-black hover:bg-gold-dim" : ""}
+          variant={activePanel === 'chat' ? 'default' : 'outline'}
+          onClick={() => setActivePanel('chat')}
+          className={activePanel === 'chat' ? 'bg-gold text-black hover:bg-gold-dim' : ''}
         >
           <MessageSquare className="w-4 h-4 mr-2" />
           Chat do Mister
         </Button>
       </div>
 
-      {/* PANELS */}
-      {activePanel === "event" && (
+      {activePanel === 'event' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-gold" /> Gerar evento com IA
+                <Sparkles className="w-5 h-5 text-gold" />
+                Gerar evento com IA
               </CardTitle>
             </CardHeader>
+
             <CardContent className="space-y-3">
               <div className="p-3 rounded bg-zinc-900/40 border border-white/5">
                 <p className="text-sm text-zinc-300">
-                  A IA vai gerar um evento “forçável” no EA FC 26 (banco, não relacionar, lista de transferência, etc).
+                  A IA vai gerar um evento “forçável” no EA FC 26 (banco, não relacionar, lista de
+                  transferência, etc).
                   <br />
                   <span className="text-zinc-500 text-xs">
-                    Limite: <b>3 eventos</b> antes do próximo jogo. O resto (chat/manchetes/comunicados) é ilimitado.
+                    Limite: <b>3 eventos</b> antes do próximo jogo. O resto é ilimitado.
                   </span>
                 </p>
               </div>
@@ -564,7 +670,7 @@ export const Office = () => {
                 disabled={isGeneratingEvent}
                 className="w-full bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase tracking-widest"
               >
-                {isGeneratingEvent ? "GERANDO..." : "GERAR EVENTO IA"}
+                {isGeneratingEvent ? 'GERANDO...' : 'GERAR EVENTO IA'}
               </Button>
 
               <Button
@@ -577,8 +683,8 @@ export const Office = () => {
 
               {nextMatchId && (
                 <div className="text-xs text-zinc-500">
-                  Próximo jogo ID: <span className="text-zinc-300">{String(nextMatchId)}</span> • usados:{" "}
-                  <span className="text-zinc-300">{usedEventThisMatch}</span>
+                  Próximo jogo ID: <span className="text-zinc-300">{String(nextMatchId)}</span> •
+                  usados: <span className="text-zinc-300">{usedEventThisMatch}</span>
                 </div>
               )}
             </CardContent>
@@ -587,9 +693,11 @@ export const Office = () => {
           <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" /> Histórico do Escritório
+                <AlertTriangle className="w-5 h-5" />
+                Histórico do Escritório
               </CardTitle>
             </CardHeader>
+
             <CardContent>
               <HistoryList />
             </CardContent>
@@ -597,17 +705,18 @@ export const Office = () => {
         </div>
       )}
 
-      {activePanel === "headlines" && (
+      {activePanel === 'headlines' && (
         <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Newspaper className="w-5 h-5 text-amber-300" /> Manchetes pro Dashboard (IA)
+              <Newspaper className="w-5 h-5 text-amber-300" />
+              Manchetes pro Dashboard (IA)
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-3">
             <p className="text-sm text-zinc-400">
               Gera 5 manchetes baseadas no momento do time e salva no seu save.
-              O Dashboard vai usar essas manchetes automaticamente.
             </p>
 
             <Button
@@ -615,14 +724,17 @@ export const Office = () => {
               disabled={isGeneratingHeadlines}
               className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase tracking-widest"
             >
-              {isGeneratingHeadlines ? "GERANDO..." : "GERAR MANCHETES"}
+              {isGeneratingHeadlines ? 'GERANDO...' : 'GERAR MANCHETES'}
             </Button>
 
             {headlinesResult.length > 0 && (
               <div className="space-y-2 pt-2">
-                {headlinesResult.map((h, i) => (
-                  <div key={i} className="p-3 rounded bg-amber-900/10 border border-amber-900/20 text-amber-100 font-heading font-semibold">
-                    {h}
+                {headlinesResult.map((headline, index) => (
+                  <div
+                    key={`${headline}-${index}`}
+                    className="p-3 rounded bg-amber-900/10 border border-amber-900/20 text-amber-100 font-heading font-semibold"
+                  >
+                    {headline}
                   </div>
                 ))}
               </div>
@@ -631,23 +743,24 @@ export const Office = () => {
         </Card>
       )}
 
-      {activePanel === "comms" && (
+      {activePanel === 'comms' && (
         <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gold" /> Comunicados (IA)
+              <FileText className="w-5 h-5 text-gold" />
+              Comunicados (IA)
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-3">
             <p className="text-sm text-zinc-400">
-              Escolhe um evento do histórico e a IA cria:
-              <b> nota interna</b> (diretoria/elenco) e <b>nota oficial</b> (imprensa).
+              Escolhe um evento do histórico e a IA cria nota interna e nota oficial.
             </p>
 
             <div className="flex gap-2 flex-wrap items-center">
               <div className="min-w-[260px] flex-1">
                 <Input
-                  placeholder="Cole aqui o ID do evento (ou escolha no histórico)"
+                  placeholder="Cole aqui o ID do evento"
                   value={selectedPastEventId}
                   onChange={(e) => setSelectedPastEventId(e.target.value)}
                 />
@@ -658,7 +771,7 @@ export const Office = () => {
                 disabled={isGeneratingComms}
                 className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase tracking-widest"
               >
-                {isGeneratingComms ? "GERANDO..." : "GERAR COMUNICADOS"}
+                {isGeneratingComms ? 'GERANDO...' : 'GERAR COMUNICADOS'}
               </Button>
             </div>
 
@@ -667,7 +780,7 @@ export const Office = () => {
                 <p className="text-white font-heading font-semibold">{selectedPastEvent.title}</p>
                 <p className="text-zinc-400 text-sm">{selectedPastEvent.description}</p>
                 <p className="text-zinc-600 text-xs mt-2">
-                  {selectedPastEvent.createdAt ? formatDate(selectedPastEvent.createdAt) : ""}
+                  {selectedPastEvent.createdAt ? formatDate(selectedPastEvent.createdAt) : ''}
                 </p>
               </div>
             )}
@@ -689,38 +802,40 @@ export const Office = () => {
         </Card>
       )}
 
-      {activePanel === "chat" && (
+      {activePanel === 'chat' && (
         <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] border-white/5">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-gold" /> Chat do Mister (IA)
+              <MessageSquare className="w-5 h-5 text-gold" />
+              Chat do Mister (IA)
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-3">
             <p className="text-sm text-zinc-400">
-              Pergunta sobre tática, momento, jogadores, mercado… a IA responde no clima da fase do time.
+              Pergunta sobre tática, momento, jogadores e mercado.
             </p>
 
             <div className="p-3 rounded bg-zinc-900/40 border border-white/5">
               <ScrollArea className="h-[280px] pr-3">
                 <div className="space-y-3">
                   {(!chatMessages || chatMessages.length === 0) && (
-                    <p className="text-zinc-500 text-sm">Manda uma pergunta aí, Teko.</p>
+                    <p className="text-zinc-500 text-sm">Manda uma pergunta aí.</p>
                   )}
 
-                  {(chatMessages || []).map((m, i) => (
+                  {(chatMessages || []).map((message, index) => (
                     <div
-                      key={i}
+                      key={`${message.role}-${index}`}
                       className={`p-3 rounded border ${
-                        m.role === "user"
-                          ? "bg-gold/10 border-gold/20 text-zinc-100"
-                          : "bg-zinc-900/40 border-white/5 text-zinc-200"
+                        message.role === 'user'
+                          ? 'bg-gold/10 border-gold/20 text-zinc-100'
+                          : 'bg-zinc-900/40 border-white/5 text-zinc-200'
                       }`}
                     >
                       <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
-                        {m.role === "user" ? "Você" : "Assistente"}
+                        {message.role === 'user' ? 'Você' : 'Assistente'}
                       </p>
-                      <p className="whitespace-pre-wrap">{m.content}</p>
+                      <p className="whitespace-pre-wrap">{message.content}</p>
                     </div>
                   ))}
                 </div>
@@ -730,7 +845,7 @@ export const Office = () => {
             <Textarea
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ex: Tô tomando gol besta. Que ajuste tático eu faço? / Quem merece banco? / Vale vender fulano?"
+              placeholder="Ex: Tô tomando gol besta. Que ajuste tático eu faço?"
               rows={3}
             />
 
@@ -740,7 +855,7 @@ export const Office = () => {
                 disabled={isChatting}
                 className="bg-gold hover:bg-gold-dim text-black font-heading font-bold uppercase tracking-widest"
               >
-                {isChatting ? "ENVIANDO..." : "ENVIAR"}
+                {isChatting ? 'ENVIANDO...' : 'ENVIAR'}
               </Button>
 
               <Button
@@ -748,8 +863,11 @@ export const Office = () => {
                 className="border-white/10 text-zinc-200"
                 onClick={() => {
                   setChatMessages([]);
-                  updateSave({ ...currentSave, aiChat: [] });
-                  toast.success("Chat limpo");
+                  updateSave({
+                    ...currentSave,
+                    aiChat: [],
+                  });
+                  toast.success('Chat limpo');
                 }}
               >
                 Limpar chat
